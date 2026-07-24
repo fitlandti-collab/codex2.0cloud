@@ -1,0 +1,30 @@
+services:
+  codex-api:
+    build: .
+    container_name: codex-api
+    ports:
+      - "8000:8000"   # acesso local/direto (opcional se só for usar via túnel)
+      - "1455:1455"   # usado só durante o "codex login" (callback do OAuth)
+    env_file:
+      - .env
+    volumes:
+      - ./workspace:/workspace       # arquivos/projeto com os quais o Codex trabalha
+      - codex_home:/root/.codex      # credenciais de login + sessões do Codex (persistente!)
+      - sessions_data:/data          # mapeamento session_id -> thread_id da nossa API
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    networks:
+      - codex_net
+
+networks:
+  # Rede compartilhada com o container do cloudflared.
+  # Se o cloudflared já roda num docker-compose separado, crie essa rede
+  # manualmente uma vez (`docker network create codex_net`) e adicione ela
+  # como "external" no compose do cloudflared também. Veja o README.
+  codex_net:
+    name: codex_net
+
+volumes:
+  codex_home:
+  sessions_data:
